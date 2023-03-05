@@ -7,7 +7,14 @@ import traceback
 # import markdown
 
 my_api_key = ""    # 在这里输入你的 API 密钥
-initial_prompt = "You are a helpful assistant."
+# initial_prompt = "You are a helpful assistant."
+initial_prompt = "You are a research assistant in the field of robotics who provide Editing & Proofreading Services for the publication of academic & scientific papers."
+
+# There are several ways you can use Chat GPT to improve the readability of text:
+    # Use Chat GPT to generate alternative phrases or sentences to make the text more concise and easier to understand.
+    # Have Chat GPT generate a summary of the text to identify any areas that may be confusing or overly complex.
+    # Use Chat GPT to rewrite sentences to improve the flow and structure of the text.
+    # Have Chat GPT generate a list of key points or main ideas from the text to help you focus on the most important information.
 
 if my_api_key == "":
     my_api_key = os.environ.get('my_api_key')
@@ -64,10 +71,11 @@ def get_response(system, context, myKey, raw = False):
 
         return message, parse_text(message_with_stats)
 
-def predict(chatbot, input_sentence, system, context, myKey):
+def predict(chatbot, input_sentence, function_choice, system, context, myKey):
     if len(input_sentence) == 0:
         return []
-    context.append({"role": "user", "content": f"{input_sentence}"})
+    # context.append({"role": "user", "content": "please rephrase it: " + f"{input_sentence}"})
+    context.append({"role": "user", "content": function_choice + f"{input_sentence}"})
 
     try:
         message, message_with_stats = get_response(system, context, myKey)
@@ -89,7 +97,7 @@ def predict(chatbot, input_sentence, system, context, myKey):
 
     context.append({"role": "assistant", "content": message})
 
-    chatbot.append((input_sentence, message_with_stats))
+    chatbot.append((parse_text(function_choice+f"{input_sentence}"), message_with_stats))
 
     return chatbot, context
 
@@ -200,12 +208,34 @@ with gr.Blocks() as demo:
             txt = gr.Textbox(show_label=False, placeholder="在这里输入").style(container=False)
         with gr.Column(min_width=50, scale=1):
             submitBtn = gr.Button("🚀", variant="primary")
+
+    with gr.Row():
+        
+        # There are several ways you can use Chat GPT to improve the readability of text:
+            # Use Chat GPT to generate alternative phrases or sentences to make the text more concise and easier to understand.
+            # Have Chat GPT generate a summary of the text to identify any areas that may be confusing or overly complex.
+            # Use Chat GPT to rewrite sentences to improve the flow and structure of the text.
+            # Have Chat GPT generate a list of key points or main ideas from the text to help you focus on the most important information.        
+        with gr.Column(scale=3.5):
+            txt_genAltSent = gr.State("Please generate alternative phrases or sentences to make the text more concise and easier to understand: ")
+            submitBtn_genAltSent = gr.Button("Generate alternative phrases or sentences to make the text more concise and easier to understand", variant="primary") 
+        with gr.Column(scale=3.5):
+            txt_genSummary = gr.State("Please generate a summary of the text to identify any areas that may be confusing or overly complex: ")
+            submitBtn_genSummary = gr.Button("Generate a summary of the text to identify any areas that may be confusing or overly complex", variant="primary")     
+        with gr.Column(scale=3.5):
+            txt_Rewrite = gr.State("Please rewrite sentences to improve the flow and structure of the text")
+            submitBtn_Rewrite = gr.Button("Rewrite sentences to improve the flow and structure of the text", variant="primary")    
+        with gr.Column(scale=3.5):
+            txt_KeyPoints = gr.State("Please generate a list of key points or main ideas from the text to help you focus on the most important information: ")
+            submitBtn_KeyPoints = gr.Button("Generate a list of key points or main ideas from the text to help you focus on the most important information", variant="primary")    
+
+
     with gr.Row():
         emptyBtn = gr.Button("🧹 新的对话")
         retryBtn = gr.Button("🔄 重新生成")
         delLastBtn = gr.Button("🗑️ 删除上条对话")
         reduceTokenBtn = gr.Button("♻️ 优化Tokens")
-    newSystemPrompt = gr.Textbox(show_label=True, placeholder=f"在这里输入新的System Prompt...", label="更改 System prompt").style(container=True)
+    # newSystemPrompt = gr.Textbox(show_label=True, placeholder=f"在这里输入新的System Prompt...", label="更改 System prompt").style(container=True)
     systemPromptDisplay = gr.Textbox(show_label=True, value=initial_prompt, interactive=False, label="目前的 System prompt").style(container=True)
     with gr.Accordion(label="保存/加载对话历史记录(在文本框中输入文件名，点击“保存对话”按钮，历史记录文件会被存储到本地)", open=False):
         with gr.Column():
@@ -216,14 +246,26 @@ with gr.Blocks() as demo:
                     saveBtn = gr.Button("💾 保存对话")
                     uploadBtn = gr.UploadButton("📂 读取对话", file_count="single", file_types=["json"])
 
-    txt.submit(predict, [chatbot, txt, systemPrompt, context, myKey], [chatbot, context], show_progress=True)
-    txt.submit(lambda :"", None, txt)
-    submitBtn.click(predict, [chatbot, txt, systemPrompt, context, myKey], [chatbot, context], show_progress=True)
+    # txt.submit(predict, [chatbot, txt, "", systemPrompt, context, myKey], [chatbot, context], show_progress=True)
+    # txt.submit(lambda :"", None, txt)
+
+    submitBtn.click(predict, [chatbot, txt, gr.State(""), systemPrompt, context, myKey], [chatbot, context], show_progress=True)
     submitBtn.click(lambda :"", None, txt)
+
+    submitBtn_genAltSent.click(predict, [chatbot, txt, txt_genAltSent, systemPrompt, context, myKey], [chatbot, context], show_progress=True)
+    submitBtn_genAltSent.click(lambda :"", None, txt)
+    submitBtn_genSummary.click(predict, [chatbot, txt, txt_genSummary, systemPrompt, context, myKey], [chatbot, context], show_progress=True)
+    submitBtn_genSummary.click(lambda :"", None, txt)
+    submitBtn_Rewrite.click(predict, [chatbot, txt, txt_Rewrite, systemPrompt, context, myKey], [chatbot, context], show_progress=True)
+    submitBtn_Rewrite.click(lambda :"", None, txt)
+    submitBtn_KeyPoints.click(predict, [chatbot, txt, txt_KeyPoints, systemPrompt, context, myKey], [chatbot, context], show_progress=True)
+    submitBtn_KeyPoints.click(lambda :"", None, txt)
+
+
     emptyBtn.click(reset_state, outputs=[chatbot, context])
-    newSystemPrompt.submit(update_system, newSystemPrompt, systemPrompt)
-    newSystemPrompt.submit(lambda x: x, newSystemPrompt, systemPromptDisplay)
-    newSystemPrompt.submit(lambda :"", None, newSystemPrompt)
+    # newSystemPrompt.submit(update_system, newSystemPrompt, systemPrompt)
+    # newSystemPrompt.submit(lambda x: x, newSystemPrompt, systemPromptDisplay)
+    # newSystemPrompt.submit(lambda :"", None, newSystemPrompt)
     retryBtn.click(retry, [chatbot, systemPrompt, context, myKey], [chatbot, context], show_progress=True)
     delLastBtn.click(delete_last_conversation, [chatbot, context], [chatbot, context], show_progress=True)
     reduceTokenBtn.click(reduce_token, [chatbot, systemPrompt, context, myKey], [chatbot, context], show_progress=True)
@@ -232,4 +274,4 @@ with gr.Blocks() as demo:
     saveBtn.click(save_chat_history, [saveFileName, systemPrompt, context], None, show_progress=True)
 
 
-demo.launch()
+demo.launch(share=False)
