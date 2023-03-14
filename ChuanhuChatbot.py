@@ -8,7 +8,8 @@ import traceback
 
 my_api_key = ""    # 在这里输入你的 API 密钥
 # initial_prompt = "You are a helpful assistant."
-initial_prompt = "You are a research assistant in the field of robotics who provide Editing & Proofreading Services for the publication of academic & scientific papers."
+# initial_prompt = "You are a research assistant in the field of robotics who provide Editing & Proofreading Services for the publication of academic & scientific papers."
+initial_prompt = "You are a research assistant in the field of robotics."
 
 # There are several ways you can use Chat GPT to improve the readability of text:
     # Use Chat GPT to generate alternative phrases or sentences to make the text more concise and easier to understand.
@@ -66,7 +67,8 @@ def get_response(system, context, myKey, raw = False):
         statistics = f'本次对话Tokens用量【{response["usage"]["total_tokens"]} / 4096】 （ 提问+上文 {response["usage"]["prompt_tokens"]}，回答 {response["usage"]["completion_tokens"]} ）'
         message = response["choices"][0]["message"]["content"]
 
-        message_with_stats = f'{message}\n\n================\n\n{statistics}'
+        # message_with_stats = f'{message}\n\n================\n\n{statistics}'
+        message_with_stats = f'{message}'        
         # message_with_stats = markdown.markdown(message_with_stats)
 
         return message, parse_text(message_with_stats)
@@ -210,7 +212,7 @@ with gr.Blocks() as demo:
             submitBtn = gr.Button("🚀", variant="primary")
 
     with gr.Row():
-        
+
         # There are several ways you can use Chat GPT to improve the readability of text:
             # Use Chat GPT to generate alternative phrases or sentences to make the text more concise and easier to understand.
             # Have Chat GPT generate a summary of the text to identify any areas that may be confusing or overly complex.
@@ -246,8 +248,8 @@ with gr.Blocks() as demo:
                     saveBtn = gr.Button("💾 保存对话")
                     uploadBtn = gr.UploadButton("📂 读取对话", file_count="single", file_types=["json"])
 
-    # txt.submit(predict, [chatbot, txt, "", systemPrompt, context, myKey], [chatbot, context], show_progress=True)
-    # txt.submit(lambda :"", None, txt)
+    txt.submit(predict, [chatbot, txt, gr.State(""), systemPrompt, context, myKey], [chatbot, context], show_progress=True)
+    txt.submit(lambda :"", None, txt)
 
     submitBtn.click(predict, [chatbot, txt, gr.State(""), systemPrompt, context, myKey], [chatbot, context], show_progress=True)
     submitBtn.click(lambda :"", None, txt)
